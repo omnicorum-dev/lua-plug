@@ -317,7 +317,7 @@ void Processor::processBlock(juce::AudioBuffer<float> &buffer,
             float  dry          = channel_data[sample];
             float  xn           = dry * in_gain;
 
-            // lua.setChannel((int)channel);
+            lua.setChannel((int)channel);
 
             if (channel == 0) {
                 input_tap.push(xn);
@@ -325,7 +325,7 @@ void Processor::processBlock(juce::AudioBuffer<float> &buffer,
 
             /* ======================================================== */
 
-            float yn = (float)lua.process(xn, (int)channel);
+            float yn = (float)lua.process(xn);
             if (!std::isfinite(yn)) {
                 yn = 0.f;
             }

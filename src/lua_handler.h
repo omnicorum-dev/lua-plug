@@ -22,6 +22,7 @@ class LuaHandler {
 
         const std::atomic<double> *fs = nullptr;
         std::array<double, 8>      macros{};
+        int                        channel = 0;
         std::string                last_error;
 
         Slot()                        = default;
@@ -38,6 +39,8 @@ class LuaHandler {
                 macros[(size_t)idx] = value;
         }
 
+        void setChannel(int ch) { channel = ch; }
+
         // Only ever called on a slot the audio thread is NOT using.
         bool compile(const char *str) {
             if (L)
@@ -49,6 +52,10 @@ class LuaHandler {
             lua_pushlightuserdata(L, this);
             lua_pushcclosure(L, &Slot::luaGetSampleRate, 1);
             lua_setglobal(L, "sampleRate");
+
+            lua_pushlightuserdata(L, this);
+            lua_pushcclosure(L, &Slot::luaGetChannel, 1);
+            lua_setglobal(L, "getChannel");
 
             lua_pushlightuserdata(L, this);
             lua_pushcclosure(L, &Slot::luaGetMacro, 1);
@@ -69,9 +76,8 @@ class LuaHandler {
             lua_pop(L, 1);
 
             if (!has_process) {
-                last_error =
-                    "Script must define: function process(input, channel)";
-                valid = false;
+                last_error = "Script must define: function process(input)";
+                valid      = false;
                 return false;
             }
 
@@ -80,15 +86,14 @@ class LuaHandler {
             return true;
         }
 
-        double process(double xn, int channel) {
+        double process(double xn) {
             if (!valid)
                 return 0;
 
             lua_getglobal(L, "process");
             lua_pushnumber(L, xn);
-            lua_pushinteger(L, channel);
 
-            if (lua_pcall(L, 2, 1, 0) != LUA_OK) {
+            if (lua_pcall(L, 1, 1, 0) != LUA_OK) {
                 lua_pop(L, 1);
                 return 0;
             }
@@ -102,6 +107,13 @@ class LuaHandler {
             auto *self =
                 static_cast<Slot *>(lua_touserdata(L, lua_upvalueindex(1)));
             lua_pushnumber(L, self->fs ? self->fs->load() : 0.0);
+            return 1;
+        }
+
+        static int luaGetChannel(lua_State *L) {
+            auto *self =
+                static_cast<Slot *>(lua_touserdata(L, lua_upvalueindex(1)));
+            lua_pushinteger(L, self->fs ? self->channel : 0);
             return 1;
         }
 
@@ -166,7 +178,8 @@ end
         ~ScopedBlock() { handler.unpin(); }
 
         void   setMacro(int idx, double v) { slot->setMacro(idx, v); }
-        double process(double xn, int ch) { return slot->process(xn, ch); }
+        void   setChannel(int ch) { slot->setChannel(ch); }
+        double process(double xn) { return slot->process(xn); }
 
       private:
         LuaHandler &handler;
