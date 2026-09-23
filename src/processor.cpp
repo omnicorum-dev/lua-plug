@@ -5,6 +5,7 @@
 #include "juce_audio_processors_headless/juce_audio_processors_headless.h"
 #include "juce_core/juce_core.h"
 #include "lua_handler.h"
+#include <cmath>
 
 /* ======================================================== */
 
@@ -325,6 +326,9 @@ void Processor::processBlock(juce::AudioBuffer<float> &buffer,
             /* ======================================================== */
 
             float yn = (float)lua.process(xn, (int)channel);
+            if (!std::isfinite(yn)) {
+                yn = 0.f;
+            }
 
             /* ======================================================== */
 
