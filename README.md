@@ -1,6 +1,24 @@
-# JUCE Template
+# LUA PLUG
 
-My own personal JUCE template, with everything set up and ready for basic DSP
+A plugin that allows you to write your own DSP in Lua,
+compile it, and run it in realtime all within the plugin!
+
+## Programming in the Plugin
+
+The JIT compiler looks for a function called `process`
+that takes a number (for the input sample) and returns
+one number (the corresponding output sample).
+
+It also provides a few useful functions:
+
+- `toMag(dB)`: Converts `dB` to a magnitude
+- `toDb(mag)`: Converts a magnitude to decibels
+- `macro(#)`: get the value (0.0 - 1.0) of macro #
+- `map(v, min, max)`: map a 0-1 value `v` from `min` to `max`
+- `sampleRate()`: returns the current sample rate
+- `getChannel()`: returns the channel of the current sample (0 -> left, 1 -> right)
+
+![Example of an atan distortion with drive (macro 1) and threshold (macro 2)](./atanExample.png)
 
 ## Setup
 
