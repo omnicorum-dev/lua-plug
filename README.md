@@ -18,7 +18,12 @@ It also provides a few useful functions:
 - `sampleRate()`: returns the current sample rate
 - `getChannel()`: returns the channel of the current sample (0 -> left, 1 -> right)
 
-![Example of an atan distortion with drive (macro 1) and threshold (macro 2)](./atanExample.png)
+Here's an example of an atan distortion with drive (macro 1)
+and threshold (macro 2).
+
+<p align="center">
+  <img src="./atanExample.png" alt="Example of atan distortion" width="400">
+</p>
 
 ## Setup
 
