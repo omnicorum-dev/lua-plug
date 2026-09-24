@@ -1,0 +1,41 @@
+name: Build
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: macos-14, name: macOS-universal }
+          - { os: windows-2022, name: Windows-x64 }
+          - { os: ubuntu-22.04, name: Linux-x64 }
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: lukka/get-cmake@latest
+      - name: Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libasound2-dev libx11-dev libxext-dev libxrandr-dev \
+            libxinerama-dev libxcursor-dev libfreetype-dev libfontconfig1-dev
+      - name: MSVC environment (so Ninja finds cl.exe)
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - run: cmake --preset release -DJUCE_PATH=
+      - run: cmake --build --preset release
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: LuaPlug-${{ github.ref_name }}-${{ matrix.name }}
+          path: |
+            build-release/luaPlug_artefacts/Release/VST3
+            build-release/luaPlug_artefacts/Release/AU
+          if-no-files-found: error
